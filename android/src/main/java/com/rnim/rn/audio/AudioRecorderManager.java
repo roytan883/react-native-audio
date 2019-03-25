@@ -284,6 +284,19 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     isPaused = true;
     promise.resolve(null);
   }
+  
+  private int getRecorderAmplitude() {
+    if (null == recorder) {
+      return 0;
+    }
+
+    int amplitude = recorder.getMaxAmplitude();
+    int ratio = amplitude / 600;
+    int db = 0;// 分贝
+    if (ratio > 1)
+      db = (int) (20 * Math.log10(ratio));
+    return db;
+  }
 
   @ReactMethod
   public void resumeRecording(Promise promise) {
@@ -315,10 +328,11 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
         if (!isPaused) {
           WritableMap body = Arguments.createMap();
           body.putDouble("currentTime", stopWatch.getTimeSeconds());
+          body.putDouble("currentMetering", getRecorderAmplitude());
           sendEvent("recordingProgress", body);
         }
       }
-    }, 0, 1000);
+    }, 0, 200);
   }
 
   private void stopTimer(){
